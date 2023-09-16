@@ -10,6 +10,7 @@
 # Standard
 import torch
 from torch import nn
+from typing import Tuple
 import torch.nn.functional as F
 
 
@@ -18,16 +19,9 @@ class KullbackLeibler(nn.Module):
 
     def __init__(
             self,
-            alpha: float = 0.1,
         ) -> "KullbackLeibler":
-        """
-            Kullback Leibler (KL) Divergence
-
-            Parameters:
-                alpha (float): Alpha
-        """
+        """ Kullback Leibler (KL) Divergence """
         super().__init__()
-        self.alpha = alpha
 
 
     def forward(self, logvar: torch.Tensor, mean: torch.Tensor) -> torch.Tensor:
@@ -35,13 +29,12 @@ class KullbackLeibler(nn.Module):
             Forward Phase
 
             Parameters:
-                logvar (torch.Tensor): Logarithm of Variance
+                logvar (torch.Tensor): Log of Variance
                 mean (torch.Tensor): Mean
             Returns:
                 (torch.Tensor): Loss
         """
         kl = (logvar ** 2 + mean ** 2 - torch.log(logvar) - 1/2).sum()  # Calculate KL
-        kl *= self.alpha                                                # Apply coefficient
         return kl
 
 
@@ -61,3 +54,43 @@ class MSE(nn.Module):
                 target (torch.Tensor): Desired image
         """
         return F.mse_loss(output, target, reduction = 'sum')
+
+
+
+class KLMSE_Loss(nn.Module):
+
+    def __init__(self, kl_alpha: float = 0.1) -> 'KLMSE_Loss':
+        """
+            KL-MSE Loss
+
+            Parameters:
+                kl_alpha (float): Kullback Leibler coefficient
+        """
+        super().__init__()
+
+        self.kl_alpha = kl_alpha
+        self.kl = KullbackLeibler()
+        self.mse = MSE()
+
+
+    def forward(
+        self,
+        output: torch.Tensor,
+        target: torch.Tensor,
+        logvar: torch.Tensor,
+        mean: torch.Tensor,
+    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        """
+            Forward Phase
+            
+            Parameters:
+                output (torch.Tensor): Output image of the model
+                target (torch.Tensor): Desired image
+                logvar (torch.Tensor): Log of Variance
+                mean (torch.Tensor): mean
+            Returns:
+                (Tuple[torch.Tensor, torch.Tensor, torch.Tensor]): KL, MSE and total loss
+        """
+        _kl = self.kl(logvar, mean) * self.kl_alpha # KL
+        _mse = self.mse(output, target)             # MSE
+        return _kl, _mse, (_kl + _mse)
