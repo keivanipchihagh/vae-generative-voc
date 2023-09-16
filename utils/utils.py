@@ -165,10 +165,7 @@ def plot_random_recon(
         ax.get_yaxis().set_visible(False)  
         ax.set_title('Original')
 
-        image = image.cpu().squeeze().permute(1, 2, 0).numpy()
-
         for j in range(times):
-
             with torch.no_grad():
                 output, _, _ = model(image)
             output = output.cpu().squeeze().permute(1, 2, 0).numpy()
@@ -180,7 +177,7 @@ def plot_random_recon(
             ax.get_yaxis().set_visible(False)
 
             # Calculate PSNR
-            psnr = calculate_psnr(output, image)
+            psnr = calculate_psnr(output, image.cpu().squeeze().permute(1, 2, 0).numpy())
             ax.set_title(f'{psnr:0.2f}')
 
     if filename: plt.savefig(filename, bbox_inches='tight')
