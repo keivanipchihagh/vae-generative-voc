@@ -75,19 +75,19 @@ class KLMSE_Loss(nn.Module):
 
     def forward(
         self,
-        output: torch.Tensor,
         target: torch.Tensor,
-        logvar: torch.Tensor,
+        output: torch.Tensor,
         mean: torch.Tensor,
+        logvar: torch.Tensor,
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
             Forward Phase
             
             Parameters:
-                output (torch.Tensor): Output image of the model
                 target (torch.Tensor): Desired image
-                logvar (torch.Tensor): Log of Variance
+                output (torch.Tensor): Output image of the model
                 mean (torch.Tensor): mean
+                logvar (torch.Tensor): Log of Variance
             Returns:
                 (Tuple[torch.Tensor, torch.Tensor, torch.Tensor]): KL, MSE and total loss
         """

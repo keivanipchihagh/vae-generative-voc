@@ -42,8 +42,8 @@ class CallBack():
         self.valid_loader = valid_loader
 
         # Random sample IDs
-        train_idxs = random.sample(len(train_loader.dataset), train_n)
-        valid_idxs = random.sample(len(valid_loader.dataset), valid_n)
+        train_idxs = random.sample(range(len(train_loader.dataset)), train_n)
+        valid_idxs = random.sample(range(len(valid_loader.dataset)), valid_n)
 
         # Random sample images
         self.train_images = [self.train_loader.dataset[idx] for idx in train_idxs]

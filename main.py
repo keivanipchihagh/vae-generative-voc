@@ -12,6 +12,7 @@ import os
 import torch
 from torch import nn
 from argparse import ArgumentParser
+from torch.utils.tensorboard import SummaryWriter
 
 # Third-party
 from train import Trainer
@@ -34,6 +35,7 @@ def load_args() -> dict:
     parser.add_argument('--use_cuda',       type=bool,  default=True,           help="Run on CUDA (default: True)")
     parser.add_argument('--seed',           type=int,   default=42,             help="Random Seed (default: 42)")
     parser.add_argument('--image_size',     type=int,   default=64,             help="Image Size (default: 64)")
+    parser.add_argument('--tensorboard',    type=bool,  default=True,           help="Use Tensorboard (default: True)")
     # Model
     parser.add_argument('--latent_dim',     type=int,   default=128,            help="Latent Dimension (default: 128)")
     parser.add_argument('--kl_alpha',       type=int,   default=1,              help="Kullback Leibler coefficient (default: 1)")
@@ -62,6 +64,10 @@ if __name__ == '__main__':
     os.makedirs(f'results/tensorboard', exist_ok = True)
     os.makedirs(f'results/psnrs', exist_ok = True)
 
+    # Initalize Tensorboard
+    tb_writer = None
+    if args.tensorboard:
+        tb_writer = SummaryWriter(f"results/tensorboard")
 
     # Enable Logging
     logger = Logger()
@@ -137,4 +143,10 @@ if __name__ == '__main__':
         optimizer = optimizer,
         device = device
     )
-    # trainer.run()
+    trainer.run(
+        start_epoch = 0,
+        end_epoch = args.max_epochs,
+        train_loader = train_loader,
+        valid_loader = valid_loader,
+        tb_writer = tb_writer
+    )

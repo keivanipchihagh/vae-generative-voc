@@ -54,19 +54,21 @@ class Trainer():
         loss = kl = mse = 0.0
         self.model.eval()       # Set evaluation mode
 
+        print("Validating", end = " ")
         with torch.no_grad():
             for _, batch in enumerate(dataloader):
                 # Read Batch
-                images = batch[0].to(self.device)
-                labels = batch[1].to(self.device)
+                images = batch.to(self.device)
 
-                outputs = self.model(images)
+                outputs, mean, logvar = self.model(images)
                 # Calculate loss
-                _kl, _mse, _loss = self.criteria(outputs, labels)
+                _kl, _mse, _loss = self.criteria(images, outputs, logvar, mean)
                 kl += _kl
                 mse += _mse
                 loss += _loss
-            
+                print("=", end = "")
+
+        print(">", end = " ")
         return kl / len(dataloader), mse / len(dataloader), loss / len(dataloader)
 
 
@@ -82,20 +84,22 @@ class Trainer():
         loss = kl = mse = 0.0
         self.model.train()      # Set training mode
 
+        print("Training", end = " ")
         for _, batch in enumerate(dataloader):
             # Read Batch
-            images = batch[0].to(self.device)
-            labels = batch[1].to(self.device)
+            images = batch.to(self.device)
 
-            output = self.model(images)
-            _kl, _mse, _loss = self.criteria(output, labels)
+            outputs, mean, logvar = self.model(images)
+            _kl, _mse, _loss = self.criteria(images, outputs, mean, logvar)
             self.optimizer.zero_grad()  # Reset Gradients
             _loss.backward()            # Propagate
             self.optimizer.step()       # Update Parameters
             kl += _kl
             mse += _mse
             loss += _loss
+            print("=", end = "")
 
+        print(">", end = " ")
         return kl / len(dataloader), mse / len(dataloader), loss / len(dataloader)
 
 
@@ -119,14 +123,17 @@ class Trainer():
         callback = CallBack(train_loader, valid_loader)
 
         for epoch in range(start_epoch, end_epoch):
+            print(f"\nEPOCH {epoch})")
 
-            # Train            
+            # Train
             train_kl, train_mse, train_loss = self.train(train_loader)
+            print(f"KL: {round(train_kl.item())}\tMSE: {round(train_mse.item())}\tLoss: {round(train_loss.item())}")
             if epoch % 100 == 0:
                 callback.on_train_end(self.model, f"results/images/train_recon_{epoch}.jpg")
 
             # Validate
             valid_kl, valid_mse, valid_loss = self.validate(valid_loader)
+            print(f"KL: {round(valid_kl.item())}\tMSE: {round(valid_mse.item())}\tLoss: {round(valid_loss.item())}")
             if epoch % 200 == 0:
                 callback.on_valid_end(self.model, f"results/images/valid_random_recon_{epoch}.jpg")
 
