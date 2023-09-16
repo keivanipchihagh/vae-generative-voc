@@ -9,6 +9,7 @@
 
 # Standard
 import random
+import torch
 from torch import nn
 from torch.utils.data import DataLoader
 
@@ -16,7 +17,7 @@ from torch.utils.data import DataLoader
 from .utils import plot_recon, plot_random_recon
 
 
-class Plotter():
+class CallBack():
 
     def __init__(
             self,
@@ -25,9 +26,9 @@ class Plotter():
             train_n: int = 5,
             valid_n: int = 3,
             random_times: int = 5,
-        ) -> 'Plotter':
+        ) -> 'CallBack':
         """
-            Plotter Callback
+            CallBack
 
             Parameters:
                 train_loader (DataLoader): Training data loader
@@ -51,7 +52,7 @@ class Plotter():
 
     def on_train_end(self, model: nn.Module, filename: str = None) -> None:
         """
-            Callback when training has ended
+            Callback to plot training data reconstruction
 
             Parameters:
                 model (nn.Module): Model to use
@@ -69,7 +70,7 @@ class Plotter():
 
     def on_valid_end(self, model: nn.Module, filename: str = None) -> None:
         """
-            Callback when validation has ended
+            Callback to plot validation data random reconstructions
 
             Parameters:
                 model (nn.Module): Model to use
@@ -83,4 +84,20 @@ class Plotter():
             title = "Validation Data Random Reconstructions",
             filename = filename,
             times = self.random_times,
+        )
+
+
+    def on_epoch_end(self, model: nn.Module, filename: str) -> None:
+        """
+            Callback to checkpoint model weights
+
+            Parameters:
+                model (nn.Module): Model to use
+                filename (str): The name and path for which to save the weights
+            Returns:
+                None
+        """
+        torch.save(
+            obj = model.state_dict(),
+            f = filename
         )
