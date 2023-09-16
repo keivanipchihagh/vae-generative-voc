@@ -13,7 +13,7 @@ from torch import nn
 from typing import Tuple, List
 
 # Third-party
-from layers import Encoder, Decoder, OutLayer
+from .layers import Encoder, Decoder, OutLayer
 
 
 class VAE(nn.Module):
