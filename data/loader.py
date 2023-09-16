@@ -20,7 +20,7 @@ def load_data(
         train_dirs: List[str],
         valid_dirs: List[str],
         batch_size: int = 32,
-        image_size: int = 256,
+        image_size: int = 64,
         num_workers: int = 4,
     ) -> Tuple[DataLoader, DataLoader]:
     """
