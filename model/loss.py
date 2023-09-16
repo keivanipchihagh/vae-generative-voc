@@ -34,8 +34,7 @@ class KullbackLeibler(nn.Module):
             Returns:
                 (torch.Tensor): Loss
         """
-        kl = (logvar ** 2 + mean ** 2 - torch.log(logvar) - 1/2).sum()  # Calculate KL
-        return kl
+        return (logvar ** 2 + mean ** 2 - torch.log(logvar ** 2) - 1/2).sum()
 
 
 # Wikipedia:    https://en.wikipedia.org/wiki/Mean_squared_error

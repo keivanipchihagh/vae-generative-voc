@@ -107,7 +107,7 @@ def plot_recon(
         image = image.unsqueeze(0)
 
         with torch.no_grad():
-            output: torch.Tensor = model(image)
+            output, _, _ = model(image)
 
         # Plot original image
         ax = plt.subplot(2, n, i + 1)
@@ -170,7 +170,7 @@ def plot_random_recon(
         for j in range(times):
 
             with torch.no_grad():
-                output: torch.Tensor = model(image)
+                output, _, _ = model(image)
             output = output.cpu().squeeze().permute(1, 2, 0).numpy()
 
             # Plot random reconstructed image
