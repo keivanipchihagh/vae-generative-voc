@@ -12,7 +12,7 @@ import math
 import torch
 import random
 import numpy as np
-from matplotlib import pyplot as plt
+from torch import nn
 
 
 def setup_seed(seed: int) -> None:
@@ -55,3 +55,22 @@ def calculate_psnr(image1: np.array|torch.Tensor, image2: np.array|torch.Tensor)
     psnr = 20 * math.log10(max_pixel_value / math.sqrt(mse))
 
     return psnr
+
+
+
+def get_model_params(model: nn.Module) -> int:
+    """
+        Calculate total number of Model Parameters
+
+        Parameters:
+            model (nn.Module): Model
+        Returns:
+            (int): Number of Parameters
+    """
+    params = 0
+    for parameter in model.parameters():
+        param = 1
+        for j in range(len(parameter.size())):
+            param *= parameter.size(j)
+        params += param
+    return params
