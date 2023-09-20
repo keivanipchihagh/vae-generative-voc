@@ -22,6 +22,7 @@ def load_data(
         batch_size: int = 32,
         image_size: int = 64,
         num_workers: int = 4,
+        n_images: int = 1000,
     ) -> Tuple[DataLoader, DataLoader]:
     """
         Loads the training and validation data
@@ -32,13 +33,14 @@ def load_data(
             batch_size (int): Number of samples per batch to load
             image_size (int): Height and width of each image
             num_workers (int): Number of workers to use
+            n_images (int): Number of images to load for training and validation
         Returns:
             (Tuple[DataLoader, DataLoader]): training and validation loaders
     """
     def _(dirs: List[str]):
         files = []
         [files.extend([str(file) for file in Path(dir).glob("*.jpg")]) for dir in dirs]
-        dataset = VOCDataset(files, image_size)
+        dataset = VOCDataset(files[:n_images], image_size)
         loader = DataLoader(
             dataset,                    # The dataset to load from
             batch_size = batch_size,    # How many samples per batch to load

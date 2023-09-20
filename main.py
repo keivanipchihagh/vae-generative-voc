@@ -50,6 +50,7 @@ def load_args() -> dict:
     parser.add_argument('--lr',             type=float, default=5e-4,           help="Initial Learning Rate")
     parser.add_argument('--lr_schedule',    type=str,   default="poly",         help="Learning Rate Scheduler Policy (default: poly)", choices = ["poly"])
     parser.add_argument('--save_plots',     type=bool,  default=True,           help="Only save the plots to files")
+    parser.add_argument('--n_images',       type=int,   default=1000,           help="Number of images to load for training and validation")
 
     return parser.parse_args()
 

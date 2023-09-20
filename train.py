@@ -129,13 +129,13 @@ class Trainer():
             # Train
             train_kl, train_mse, train_loss = self.train(train_loader)
             print(f"KL: {round(train_kl.item())}\tMSE: {round(train_mse.item())}\tLoss: {round(train_loss.item())}")
-            if epoch % 100 == 0:
+            if epoch % 10 == 0:
                 callback.on_train_end(self.model, f"results/images/train_recon_{epoch}.jpg" if save_plot else None)
 
             # Validate
             valid_kl, valid_mse, valid_loss = self.validate(valid_loader)
             print(f"KL: {round(valid_kl.item())}\tMSE: {round(valid_mse.item())}\tLoss: {round(valid_loss.item())}")
-            if epoch % 200 == 0:
+            if epoch % 20 == 0:
                 callback.on_valid_end(self.model, f"results/images/valid_random_recon_{epoch}.jpg" if save_plot else None)
 
             # Tensorboard
@@ -149,5 +149,5 @@ class Trainer():
                     ('loss/train', train_loss), ('loss/valid', valid_loss),
                 ]: tb_writer.add_scalar(name, metric.item(), epoch)
 
-            if epoch % 100 == 0:
+            if epoch % 50 == 0:
                 callback.on_epoch_end(self.model, f"results/weights/{epoch}.pth")
