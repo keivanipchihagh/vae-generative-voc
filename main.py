@@ -49,6 +49,7 @@ def load_args() -> dict:
     parser.add_argument('--optim',          type=str,   default="adam",         help="Checkpoint to resume from (default: None)", choices=["sgd", "adam"])
     parser.add_argument('--lr',             type=float, default=5e-4,           help="Initial Learning Rate")
     parser.add_argument('--lr_schedule',    type=str,   default="poly",         help="Learning Rate Scheduler Policy (default: poly)", choices = ["poly"])
+    parser.add_argument('--save_plots',     type=bool,  default=True,           help="Only save the plots to files")
 
     return parser.parse_args()
 
@@ -56,7 +57,6 @@ def load_args() -> dict:
 
 if __name__ == '__main__':
     args = load_args()      # Load CMD Arguments
-    device = torch.device("cuda") if args.use_cuda else torch.device("cpu")
 
     # Create dirs if not already exist
     os.makedirs(f'results/images', exist_ok = True)
@@ -80,6 +80,7 @@ if __name__ == '__main__':
             logger.info("CUDA:\tEnabled")
         else:
             logger.warn("CUDA:\tNot available!")
+            args.use_cuda = False   # Disable CUDA forcefully
 
     # --- Set Seed ---
     setup_seed(args.seed)
@@ -102,7 +103,7 @@ if __name__ == '__main__':
         in_channels = 3,
         latent_dim = 256,
         hidden_dims = [32, 64, 126, 256, 512],
-        use_cuda = True
+        device = device
     )
     if args.use_cuda:
         model = nn.DataParallel(model).cuda()
@@ -148,5 +149,6 @@ if __name__ == '__main__':
         end_epoch = args.max_epochs,
         train_loader = train_loader,
         valid_loader = valid_loader,
-        tb_writer = tb_writer
+        tb_writer = tb_writer,
+        save_plot = args.save_plots,
     )

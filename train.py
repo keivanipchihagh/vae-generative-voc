@@ -54,7 +54,7 @@ class Trainer():
         loss = kl = mse = 0.0
         self.model.eval()       # Set evaluation mode
 
-        print("Validating", end = " ")
+        print("Validating", end = "\t")
         with torch.no_grad():
             for _, batch in enumerate(dataloader):
                 # Read Batch
@@ -84,7 +84,7 @@ class Trainer():
         loss = kl = mse = 0.0
         self.model.train()      # Set training mode
 
-        print("Training", end = " ")
+        print("Training", end = "\t")
         for _, batch in enumerate(dataloader):
             # Read Batch
             images = batch.to(self.device)
@@ -110,6 +110,7 @@ class Trainer():
         train_loader: DataLoader,
         valid_loader: DataLoader,
         tb_writer: SummaryWriter = None,
+        save_plot: bool = True,
     ) -> None:
         """
             Main Loop
@@ -129,13 +130,13 @@ class Trainer():
             train_kl, train_mse, train_loss = self.train(train_loader)
             print(f"KL: {round(train_kl.item())}\tMSE: {round(train_mse.item())}\tLoss: {round(train_loss.item())}")
             if epoch % 100 == 0:
-                callback.on_train_end(self.model, f"results/images/train_recon_{epoch}.jpg")
+                callback.on_train_end(self.model, f"results/images/train_recon_{epoch}.jpg" if save_plot else None)
 
             # Validate
             valid_kl, valid_mse, valid_loss = self.validate(valid_loader)
             print(f"KL: {round(valid_kl.item())}\tMSE: {round(valid_mse.item())}\tLoss: {round(valid_loss.item())}")
             if epoch % 200 == 0:
-                callback.on_valid_end(self.model, f"results/images/valid_random_recon_{epoch}.jpg")
+                callback.on_valid_end(self.model, f"results/images/valid_random_recon_{epoch}.jpg" if save_plot else None)
 
             # Tensorboard
             if tb_writer:

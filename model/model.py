@@ -23,10 +23,10 @@ class VAE(nn.Module):
             in_channels: int,
             latent_dim: int,
             hidden_dims: List[int] = [32, 64, 128, 256, 512],
-            use_cuda: bool = True
+            device: torch.device = torch.device('cpu')
         ) -> 'VAE':
         super(VAE, self).__init__()
-        self.device = torch.device("cuda") if use_cuda else torch.device("cpu")
+        self.device = device
 
         self.latent_dim = latent_dim
 

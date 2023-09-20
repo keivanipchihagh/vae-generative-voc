@@ -99,8 +99,8 @@ def plot_recon(
     """
     model.eval()                # Set model in evaluation
     if filename: plt.ioff()     # Disable interactive mode
-    plt.title(title)
     plt.figure(figsize=(10, 3))
+    plt.title(title)
     n = len(images)
 
     for i, image in enumerate(images):
@@ -151,8 +151,8 @@ def plot_random_recon(
     """
     model.eval()                # Set model in evaluation
     if filename: plt.ioff()     # Disable interactive mode
-    plt.title(title)
     plt.figure(figsize=(10, 3))
+    plt.title(title)
     n = len(images)
 
     for i, image in enumerate(images):
