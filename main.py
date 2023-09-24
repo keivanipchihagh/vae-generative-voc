@@ -37,7 +37,7 @@ def load_args() -> dict:
     parser.add_argument('--image_size',     type=int,   default=64,             help="Image Size (default: 64)")
     parser.add_argument('--tensorboard',    type=bool,  default=True,           help="Use Tensorboard (default: True)")
     # Model
-    parser.add_argument('--latent_dim',     type=int,   default=128,            help="Latent Dimension (default: 128)")
+    parser.add_argument('--latent_dim',     type=int,   default=512,            help="Latent Dimension (default: 128)")
     parser.add_argument('--kl_alpha',       type=int,   default=1,              help="Kullback Leibler coefficient (default: 1)")
     # Datasets
     parser.add_argument('--batch_size',     type=int,   default=16,             help="Batch Size (default: 16)")
