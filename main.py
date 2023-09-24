@@ -50,7 +50,7 @@ def load_args() -> dict:
     parser.add_argument('--lr',             type=float, default=5e-4,           help="Initial Learning Rate")
     parser.add_argument('--lr_schedule',    type=str,   default="poly",         help="Learning Rate Scheduler Policy (default: poly)", choices = ["poly"])
     parser.add_argument('--save_plots',     type=bool,  default=True,           help="Only save the plots to files")
-    parser.add_argument('--n_images',       type=int,   default=1000,           help="Number of images to load for training and validation")
+    parser.add_argument('--n_images',       type=int,   default=None,           help="Number of images to load for training and validation")
 
     return parser.parse_args()
 
@@ -59,19 +59,23 @@ def load_args() -> dict:
 if __name__ == '__main__':
     args = load_args()      # Load CMD Arguments
 
+    # Enable Logging
+    logger = Logger()
+
+    # Must be unique for different parameters
+    identifier = f"seed{args.seed}_is{args.image_size}_ld{args.latent_dim}_bs{args.batch_size}_kl{args.kl_alpha}_lr{args.lr}_n{args.n_images}"
+    logger.info(f"Identifier: {identifier}")
+
     # Create dirs if not already exist
-    os.makedirs(f'results/images', exist_ok = True)
-    os.makedirs(f'results/weights', exist_ok = True)
-    os.makedirs(f'results/tensorboard', exist_ok = True)
-    os.makedirs(f'results/psnrs', exist_ok = True)
+    os.makedirs(f'results/images/{identifier}', exist_ok = True)
+    os.makedirs(f'results/weights/{identifier}', exist_ok = True)
+    os.makedirs(f'results/tensorboard/{identifier}', exist_ok = True)
+    os.makedirs(f'results/psnrs/{identifier}', exist_ok = True)
 
     # Initalize Tensorboard
     tb_writer = None
     if args.tensorboard:
-        tb_writer = SummaryWriter(f"results/tensorboard")
-
-    # Enable Logging
-    logger = Logger()
+        tb_writer = SummaryWriter(f"results/tensorboard/{identifier}")
 
     # --- CUDA ---
     device = torch.device('cpu')
@@ -94,7 +98,8 @@ if __name__ == '__main__':
         valid_dirs = ["data\VOCdevkit\VOC2007\JPEGImages"],
         batch_size = args.batch_size,
         image_size = args.image_size,
-        num_workers = args.num_workers
+        num_workers = args.num_workers,
+        n_images = args.n_images,
     )
     logger.info(f"Dataset:\t{len(train_loader.dataset)}, {len(valid_loader.dataset)}")
 
@@ -152,4 +157,5 @@ if __name__ == '__main__':
         valid_loader = valid_loader,
         tb_writer = tb_writer,
         save_plot = args.save_plots,
+        identifier = identifier,
     )

@@ -25,7 +25,8 @@ class Trainer():
             model: nn.Module,
             criteria,
             optimizer: optim.Optimizer,
-            device: torch.device = torch.device("cuda")
+            device: torch.device = torch.device("cuda"),
+            max_norm: int = 5,
         ) -> 'Trainer':
         """
             Trainer
@@ -35,11 +36,13 @@ class Trainer():
                 criteria: Loss function
                 optimizer (optim.Optimizer): Optimization strategy
                 device (torch.device): Device to mount the training on
+                max_norm (int): Max norm for gradient clipping
         """
         self.model = model
         self.criteria = criteria
         self.optimizer = optimizer
         self.device = device
+        self.max_norm = max_norm
 
 
     def validate(self, dataloader: DataLoader) -> torch.Tensor:
@@ -93,6 +96,7 @@ class Trainer():
             _kl, _mse, _loss = self.criteria(images, outputs, mean, logvar)
             self.optimizer.zero_grad()  # Reset Gradients
             _loss.backward()            # Propagate
+            torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.max_norm)
             self.optimizer.step()       # Update Parameters
             kl += _kl
             mse += _mse
@@ -111,6 +115,7 @@ class Trainer():
         valid_loader: DataLoader,
         tb_writer: SummaryWriter = None,
         save_plot: bool = True,
+        identifier: str = "",
     ) -> None:
         """
             Main Loop
@@ -130,13 +135,13 @@ class Trainer():
             train_kl, train_mse, train_loss = self.train(train_loader)
             print(f"KL: {round(train_kl.item())}\tMSE: {round(train_mse.item())}\tLoss: {round(train_loss.item())}")
             if epoch % 10 == 0:
-                callback.on_train_end(self.model, f"results/images/train_recon_{epoch}.jpg" if save_plot else None)
+                callback.on_train_end(self.model, f"results/images/{identifier}/train_recon_{epoch}.jpg" if save_plot else None)
 
             # Validate
             valid_kl, valid_mse, valid_loss = self.validate(valid_loader)
             print(f"KL: {round(valid_kl.item())}\tMSE: {round(valid_mse.item())}\tLoss: {round(valid_loss.item())}")
             if epoch % 20 == 0:
-                callback.on_valid_end(self.model, f"results/images/valid_random_recon_{epoch}.jpg" if save_plot else None)
+                callback.on_valid_end(self.model, f"results/images/{identifier}/valid_random_recon_{epoch}.jpg" if save_plot else None)
 
             # Tensorboard
             if tb_writer:
