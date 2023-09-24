@@ -10,7 +10,7 @@
 # Standard
 import torch
 from torch import nn
-from typing import Tuple, List
+from typing import Tuple, List, Optional
 
 # Third-party
 from .layers import Encoder, Decoder, OutLayer
@@ -23,11 +23,12 @@ class VAE(nn.Module):
             in_channels: int,
             latent_dim: int,
             hidden_dims: List[int] = [32, 64, 128, 256, 512],
-            device: torch.device = torch.device('cpu')
+            device: torch.device = torch.device('cpu'),
+            has_skip: bool = True
         ) -> 'VAE':
         super(VAE, self).__init__()
         self.device = device
-
+        self.has_skip = has_skip
         self.latent_dim = latent_dim
 
         modules = []
@@ -36,7 +37,12 @@ class VAE(nn.Module):
         for h_dim in hidden_dims:
             modules.append(Encoder(in_channels, h_dim))
             in_channels = h_dim
-        self.encoder = nn.Sequential(*modules)
+        self.encoder_1 = nn.Sequential(*modules)
+        self.encoder_2 = nn.Sequential(
+            nn.Flatten(),
+            # nn.Linear(2048, 2048),
+            # nn.LeakyReLU(inplace=False),
+        )
 
         # Latent Space
         self.mean_layer = nn.Linear(hidden_dims[-1] * 4, latent_dim)
@@ -44,15 +50,21 @@ class VAE(nn.Module):
 
         # Decoder
         modules = []
-        self.decoder_input = nn.Linear(latent_dim, hidden_dims[-1] * 4)
+        self.decoder_1 = nn.Sequential(
+            nn.Linear(latent_dim, hidden_dims[-1] * 4),
+            nn.LeakyReLU(inplace=False),
+            # nn.Linear(hidden_dims[-1] * 2, hidden_dims[-1] * 4),
+            # nn.LeakyReLU(inplace=False),
+        )
 
         hidden_dims.reverse()
-
+        if has_skip:
+            hidden_dims[0] *= 2
         for i in range(len(hidden_dims) - 1):
             modules.append(Decoder(hidden_dims[i], hidden_dims[i + 1]))
 
-        self.decoder = nn.Sequential(*modules)
-        self.final_layer = OutLayer(hidden_dims[-1], hidden_dims[-1])
+        self.decoder_2 = nn.Sequential(*modules)
+        self.decoder_out = OutLayer(hidden_dims[-1], hidden_dims[-1])
 
 
     def reparameterize(self, mean: torch.Tensor, logvar: torch.Tensor) -> torch.Tensor:
@@ -79,14 +91,17 @@ class VAE(nn.Module):
             Returns:
                 (Tuple[torch.Tensor, torch.Tensor]): mean and logvar Tensors
         """
-        x = self.encoder(x)                 # Encode
-        x = torch.flatten(x, start_dim=1)   # Flatten
+        feat = self.encoder_1(x)            # Encode
+        x = self.encoder_2(feat)            # Encode
         mu = self.mean_layer(x)             # Mean
         logvar = self.logvar_layer(x)       # Logvar
+
+        if self.has_skip:
+            return mu, logvar, feat
         return mu, logvar
 
 
-    def decode(self, x: torch.Tensor) -> torch.Tensor:
+    def decode(self, x: torch.Tensor, feat: Optional[torch.Tensor] = None) -> torch.Tensor:
         """
             Forward pass for the decoder
 
@@ -95,10 +110,14 @@ class VAE(nn.Module):
             Returns:
                 (torch.torch.Tensor): Reconstructed image
         """
-        x = self.decoder_input(x)   # Unflatten
+        x = self.decoder_1(x)
         x = x.view(-1, 512, 2, 2)   # Reshape
-        x = self.decoder(x)         # Decode
-        x = self.final_layer(x)     # Final Layer
+
+        if self.has_skip:
+            x = torch.cat((x, feat), dim = 1)
+
+        x = self.decoder_2(x)       # Decode
+        x = self.decoder_out(x)     # Decoder output
         return x
 
 
@@ -111,7 +130,14 @@ class VAE(nn.Module):
             Returns:
                 (Tuple[torch.Tensor, torch.Tensor, torch.Tensor]): Reconstructed image, mean and logvar
         """
-        mu, logvar = self.encode(x)           # Encode
+        # Encode
+        if self.has_skip:   mu, logvar, feat = self.encode(x)
+        else:               mu, logvar = self.encode(x)
+
         z = self.reparameterize(mu, logvar)   # Reparameterize
-        recon = self.decode(z)                # Decode
+
+        # Decode
+        if self.has_skip:   recon = self.decode(z, feat)
+        else:               self.decode(z, feat)
+
         return recon, mu, logvar
