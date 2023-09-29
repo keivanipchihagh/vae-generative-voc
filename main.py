@@ -107,7 +107,7 @@ if __name__ == '__main__':
     # --- Define Model ---
     model = VAE(
         in_channels = 3,
-        latent_dim = 256,
+        latent_dim = args.latent_dim,
         hidden_dims = [32, 64, 126, 256, 512],
         device = device
     )
