@@ -37,7 +37,7 @@ def load_args() -> dict:
     parser.add_argument('--image_size',     type=int,   default=64,             help="Image Size (default: 64)")
     parser.add_argument('--tensorboard',    type=bool,  default=True,           help="Use Tensorboard (default: True)")
     # Model
-    parser.add_argument('--latent_dim',     type=int,   default=512,            help="Latent Dimension (default: 128)")
+    parser.add_argument('--latent_dim',     type=int,   default=1024,           help="Latent Dimension (default: 128)")
     parser.add_argument('--kl_alpha',       type=int,   default=1,              help="Kullback Leibler coefficient (default: 1)")
     # Datasets
     parser.add_argument('--batch_size',     type=int,   default=16,             help="Batch Size (default: 16)")
@@ -45,7 +45,7 @@ def load_args() -> dict:
     parser.add_argument('--num_workers',    type=int,   default=2,              help="Number of Workers (defualt: 4)")
     # Training
     parser.add_argument('--max_epochs',     type=int,   default=1000,           help="Maximum Number of Epochs (default: 1000)")
-    parser.add_argument('--resume',         type=str,   default=None,           help="Checkpoint to resume from (default: None)")
+    parser.add_argument('--resume',         type=int,   default=None,           help="Epoch to resume from (default: None)")
     parser.add_argument('--optim',          type=str,   default="adam",         help="Checkpoint to resume from (default: None)", choices=["sgd", "adam"])
     parser.add_argument('--lr',             type=float, default=5e-4,           help="Initial Learning Rate")
     parser.add_argument('--lr_schedule',    type=str,   default="poly",         help="Learning Rate Scheduler Policy (default: poly)", choices = ["poly"])
@@ -143,6 +143,10 @@ if __name__ == '__main__':
     logger.info(f"Optimizer:\t{args.optim}")
 
 
+    if args.resume:
+        weights = torch.load(f"results/weights/{args.resume}.pth")
+        model.load_state_dict(weights)
+
     # --- Training ---
     trainer = Trainer(
         model = model,
@@ -151,7 +155,7 @@ if __name__ == '__main__':
         device = device
     )
     trainer.run(
-        start_epoch = 0,
+        start_epoch = args.resume,
         end_epoch = args.max_epochs,
         train_loader = train_loader,
         valid_loader = valid_loader,
